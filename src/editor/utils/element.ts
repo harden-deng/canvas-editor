@@ -632,13 +632,15 @@ export function zipElementList(
     // 上下文首字符（占位符）-列表首字符要保留避免是复选框
     if (
       e === 0 &&
-      element.value === ZERO &&
-      !element.listId &&
+      element.value === ZERO && !element.listId &&
+     
       (!element.type || element.type === ElementType.TEXT)
     ) {
       e++
+      console.log("来了老铁-1111111111111--》")
       continue
     }
+    console.log("来了老铁-222222222222222--》")
     // 优先处理虚拟元素，后表格、超链接、日期、控件特殊处理
     if (element.areaId) {
       const areaId = element.areaId
@@ -874,8 +876,337 @@ export function zipElementList(
     }
     // 组合元素
     const pickElement = pickElementAttr(element, { extraPickAttrs })
-    if (
-      !element.type ||
+    if (!element.type ||
+      
+      element.type === ElementType.TEXT ||
+      element.type === ElementType.SUBSCRIPT ||
+      element.type === ElementType.SUPERSCRIPT
+    ) {
+      while (e < elementList.length) {
+        const nextElement = elementList[e + 1]
+        e++
+        if (
+          nextElement &&
+          isSameElementExceptValue(
+            pickElement,
+            pickElementAttr(nextElement, { extraPickAttrs })
+          )
+        ) {
+          const nextValue =
+            nextElement.value === ZERO ? '\n' : nextElement.value
+          pickElement.value += nextValue
+        } else {
+          break
+        }
+      }
+    } else {
+      e++
+    }
+    zipElementListData.push(pickElement)
+    
+     // 组合元素
+    //  const pickElement = pickElementAttr(element, { extraPickAttrs })
+    //  if ( !element.type ||
+    //   
+    //    element.type === ElementType.TEXT ||
+    //    element.type === ElementType.SUBSCRIPT ||
+    //    element.type === ElementType.SUPERSCRIPT
+    //  ) {
+    //    // 如果当前元素是零宽字符，不进行合并，保留每个零宽字符元素
+    //    if (element.value === ZERO) {
+    //      e++
+    //      zipElementListData.push(pickElement)
+    //      continue
+    //    }
+       
+    //    while (e < elementList.length) {
+    //      const nextElement = elementList[e + 1]
+    //      e++
+    //      if (
+    //        nextElement &&
+    //        // 如果下一个元素是零宽字符，不合并，保留独立的零宽字符元素
+    //        nextElement.value !== ZERO &&
+    //        isSameElementExceptValue(
+    //          pickElement,
+    //          pickElementAttr(nextElement, { extraPickAttrs })
+    //        )
+    //      ) {
+    //        const nextValue =
+    //          nextElement.value === ZERO ? '\n' : nextElement.value
+    //        pickElement.value += nextValue
+    //      } else {
+    //        break
+    //      }
+    //    }
+    //  } else {
+    //    e++
+    //  }
+    //  zipElementListData.push(pickElement)
+
+  }
+  console.log("zipElementListData你压缩了什么-->",zipElementListData)
+  return zipElementListData
+}
+
+export function zipElementList2(
+  payload: IElement[],
+  options: IZipElementListOption = {}
+): IElement[] {
+  const { extraPickAttrs, isClassifyArea = false, isClone = true } = options
+  const elementList = isClone ? deepClone(payload) : payload
+  const zipElementListData: IElement[] = []
+  let e = 0
+  while (e < elementList.length) {
+    let element = elementList[e]
+    // 上下文首字符（占位符）-列表首字符要保留避免是复选框
+    // if (
+    //   e === 0 &&
+    //   element.value === ZERO && !element.listId &&
+     
+    //   (!element.type || element.type === ElementType.TEXT)
+    // ) {
+    //   e++
+    //   console.log("来了老铁-1111111111111--》")
+    //   continue
+    // }
+    console.log("来了老铁-进了备用压缩-333333--》")
+    // 优先处理虚拟元素，后表格、超链接、日期、控件特殊处理
+    if (element.areaId) {
+      const areaId = element.areaId
+      const area = element.area
+      // 收集并压缩数据
+      const valueList: IElement[] = []
+      while (e < elementList.length) {
+        const areaE = elementList[e]
+        if (areaId !== areaE.areaId) {
+          e--
+          break
+        }
+        delete areaE.area
+        delete areaE.areaId
+        valueList.push(areaE)
+        e++
+      }
+      const areaElementList = zipElementList(valueList, options)
+      // 不归类区域元素
+      if (isClassifyArea) {
+        const areaElement: IElement = {
+          type: ElementType.AREA,
+          value: '',
+          areaId,
+          area
+        }
+        areaElement.valueList = areaElementList
+        element = areaElement
+      } else {
+        zipElementListData.splice(e, 0, ...areaElementList)
+        continue
+      }
+    } else if (element.titleId && element.level) {
+      // 标题处理
+      const titleId = element.titleId
+      if (titleId) {
+        const level = element.level
+        const titleElement: IElement = {
+          type: ElementType.TITLE,
+          title: element.title,
+          titleId,
+          value: '',
+          level
+        }
+        const valueList: IElement[] = []
+        while (e < elementList.length) {
+          const titleE = elementList[e]
+          if (titleId !== titleE.titleId) {
+            e--
+            break
+          }
+          delete titleE.level
+          delete titleE.title
+          valueList.push(titleE)
+          e++
+        }
+        titleElement.valueList = zipElementList(valueList, options)
+        element = titleElement
+      }
+    } else if (element.listId && element.listType) {
+      // 列表处理
+      const listId = element.listId
+      if (listId) {
+        const listType = element.listType
+        const listStyle = element.listStyle
+        const listElement: IElement = {
+          type: ElementType.LIST,
+          value: '',
+          listId,
+          listType,
+          listStyle
+        }
+        const valueList: IElement[] = []
+        while (e < elementList.length) {
+          const listE = elementList[e]
+          if (listId !== listE.listId) {
+            e--
+            break
+          }
+          delete listE.listType
+          delete listE.listStyle
+          valueList.push(listE)
+          e++
+        }
+        listElement.valueList = zipElementList(valueList, options)
+        element = listElement
+      }
+    } else if (element.type === ElementType.TABLE) {
+      // 分页表格先进行合并
+      if (element.pagingId) {
+        let tableIndex = e + 1
+        let combineCount = 0
+        while (tableIndex < elementList.length) {
+          const nextElement = elementList[tableIndex]
+          if (nextElement.pagingId === element.pagingId) {
+            element.height! += nextElement.height!
+            element.trList!.push(...nextElement.trList!)
+            tableIndex++
+            combineCount++
+          } else {
+            break
+          }
+        }
+        e += combineCount
+      }
+      if (element.trList) {
+        for (let t = 0; t < element.trList.length; t++) {
+          const tr = element.trList[t]
+          delete tr.id
+          for (let d = 0; d < tr.tdList.length; d++) {
+            const td = tr.tdList[d]
+            const zipTd: ITd = {
+              colspan: td.colspan,
+              rowspan: td.rowspan,
+              value: zipElementList(td.value, {
+                ...options,
+                isClassifyArea: false
+              })
+            }
+            // 压缩单元格属性
+            TABLE_TD_ZIP_ATTR.forEach(attr => {
+              const value = td[attr] as never
+              if (value !== undefined) {
+                zipTd[attr] = value
+              }
+            })
+            tr.tdList[d] = zipTd
+          }
+        }
+      }
+    } else if (element.type === ElementType.HYPERLINK) {
+      // 超链接处理
+      const hyperlinkId = element.hyperlinkId
+      if (hyperlinkId) {
+        const hyperlinkElement: IElement = {
+          type: ElementType.HYPERLINK,
+          value: '',
+          url: element.url
+        }
+        const valueList: IElement[] = []
+        while (e < elementList.length) {
+          const hyperlinkE = elementList[e]
+          if (hyperlinkId !== hyperlinkE.hyperlinkId) {
+            e--
+            break
+          }
+          delete hyperlinkE.type
+          delete hyperlinkE.url
+          valueList.push(hyperlinkE)
+          e++
+        }
+        hyperlinkElement.valueList = zipElementList(valueList, options)
+        element = hyperlinkElement
+      }
+    } else if (element.type === ElementType.DATE) {
+      const dateId = element.dateId
+      if (dateId) {
+        const dateElement: IElement = {
+          type: ElementType.DATE,
+          value: '',
+          dateFormat: element.dateFormat
+        }
+        const valueList: IElement[] = []
+        while (e < elementList.length) {
+          const dateE = elementList[e]
+          if (dateId !== dateE.dateId) {
+            e--
+            break
+          }
+          delete dateE.type
+          delete dateE.dateFormat
+          valueList.push(dateE)
+          e++
+        }
+        dateElement.valueList = zipElementList(valueList, options)
+        element = dateElement
+      }
+    } else if (element.controlId) {
+      const controlId = element.controlId
+      // 控件包含前后缀则转换为控件
+      if (element.controlComponent === ControlComponent.PREFIX) {
+        const valueList: IElement[] = []
+        let isFull = false
+        let start = e
+        while (start < elementList.length) {
+          const controlE = elementList[start]
+          if (controlId !== controlE.controlId) break
+          if (controlE.controlComponent === ControlComponent.VALUE) {
+            delete controlE.control
+            delete controlE.controlId
+            valueList.push(controlE)
+          }
+          if (controlE.controlComponent === ControlComponent.POSTFIX) {
+            isFull = true
+          }
+          start++
+        }
+        if (isFull) {
+          // 以前缀为基准更新控件默认样式
+          const controlDefaultStyle = <IControlSelect>(
+            (<unknown>pickObject(element, CONTROL_STYLE_ATTR))
+          )
+          const control = {
+            ...element.control!,
+            ...controlDefaultStyle
+          }
+          const controlElement: IElement = {
+            ...pickObject(element, EDITOR_ROW_ATTR),
+            type: ElementType.CONTROL,
+            value: '',
+            control,
+            controlId
+          }
+          controlElement.control!.value = zipElementList(valueList, options)
+          element = pickElementAttr(controlElement, { extraPickAttrs })
+          // 控件元素数量 - 1（当前元素）
+          e += start - e - 1
+        }
+      }
+      // 不完整的控件元素不转化为控件，如果不是文本则直接忽略
+      if (element.controlComponent) {
+        delete element.control
+        delete element.controlId
+        if (
+          element.controlComponent !== ControlComponent.VALUE &&
+          element.controlComponent !== ControlComponent.PRE_TEXT &&
+          element.controlComponent !== ControlComponent.POST_TEXT
+        ) {
+          e++
+          continue
+        }
+      }
+    }
+    // 组合元素
+    const pickElement = pickElementAttr(element, { extraPickAttrs })
+    if (!element.type ||
+      
       element.type === ElementType.TEXT ||
       element.type === ElementType.SUBSCRIPT ||
       element.type === ElementType.SUPERSCRIPT
@@ -902,6 +1233,7 @@ export function zipElementList(
     }
     zipElementListData.push(pickElement)
   }
+  console.log("备用zipElementListData你压缩了什么-->",zipElementListData)
   return zipElementListData
 }
 
@@ -1081,7 +1413,13 @@ export function convertElementToDom(
       element.rowMargin ?? options.defaultRowMargin
     ).toString()
   }
-  dom.innerText = element.value.replace(new RegExp(`${ZERO}`, 'g'), '\n')
+  // dom.innerText = element.value.replace(new RegExp(`${ZERO}`, 'g'), '\n')
+  // return dom
+    // 只有当 value 存在时才设置 innerText，避免空值错误
+  // if (element.value) {
+    console.log('只有当 value 存在时才设置 innerText，避免空值错误---->', element)
+    dom.innerText = element.value.replace(new RegExp(`${ZERO}`, 'g'), '\n')
+  // }
   return dom
 }
 
@@ -1158,18 +1496,53 @@ export function groupElementListByRowFlex(
   // 压缩数据
   for (let g = 0; g < elementListGroupList.length; g++) {
     const elementListGroup = elementListGroupList[g]
-    elementListGroup.data = zipElementList(elementListGroup.data)
+    console.log('没压缩之前压缩数据---->', JSON.parse(JSON.stringify(elementListGroup)))
+    // elementListGroup.data = zipElementList(elementListGroup.data)
+    const shiyan:any = elementListGroup.data[elementListGroup.data.length - 1]
+    console.log('备用压缩---->最后一个元素---->', shiyan,Object.keys(shiyan).length)
+    if(shiyan.value === ZERO && shiyan.left == 0 && Object.keys(shiyan).length == 4){
+      elementListGroup.data = zipElementList2(elementListGroup.data)
+    }else{
+      elementListGroup.data = zipElementList(elementListGroup.data)
+    }
   }
   return elementListGroupList
 }
-
+/**
+ * 用于将元素列表转换为DOM结构。我来详细解释这个函数的功能和实现原理：
+ * @param elementList 
+ * @param options 
+ * @returns {
+ *   HTMLDivElement
+ * }
+ */
 export function createDomFromElementList(
   elementList: IElement[],
   options?: IEditorOption
 ) {
+  console.log('转成DOM结构的入口函数:createDomFromElementList--11111-->',elementList)
   const editorOptions = mergeOption(options)
+/**
+ * 根据元素数组构建DOM树
+ * @param payload 元素数组，包含各种类型的元素
+ * @returns 返回构建好的HTMLDivElement
+ */
+/**
+  // 创建一个div元素作为容器
+ * 构建DOM元素的函数
+ * @param payload - 包含元素信息的数组
+  // 遍历payload数组中的每个元素
+ * @returns 返回构建好的HTMLDivElement
+ */
   function buildDom(payload: IElement[]): HTMLDivElement {
     const clipboardDom = document.createElement('div')
+    console.log('buildDom----->payload---11111-->', payload)
+     // 如果 payload 为空数组，添加一个 <br> 元素节点
+     if (payload.length === 0) {
+      const br = document.createElement('br')
+      clipboardDom.append(br)
+      return clipboardDom
+    }
     for (let e = 0; e < payload.length; e++) {
       const element = payload[e]
       // 构造表格
@@ -1179,7 +1552,7 @@ export function createDomFromElementList(
         tableDom.setAttribute('cellpadding', '0')
         tableDom.setAttribute('border', '0')
         tableDom.setAttribute('data-border-type',element.borderType||TableBorder.ALL)
-        const borderStyle = '1px solid #000000'
+        const borderStyle = '1px solidrgb(53, 18, 18)'
         // 表格边框
         if (!element.borderType || element.borderType === TableBorder.ALL) {
           tableDom.style.borderTop = borderStyle
@@ -1343,27 +1716,74 @@ export function createDomFromElementList(
         element.type === ElementType.LATEX ||
         TEXTLIKE_ELEMENT_TYPE.includes(element.type)
       ) {
+        if(!element.type){
+          console.warn('是你吗？-111--->',element)
+        }
         let text = ''
         if (element.type === ElementType.DATE) {
           text = element.valueList?.map(v => v.value).join('') || ''
         } else {
           text = element.value
         }
-        if (!text) continue
-        const dom = convertElementToDom(element, editorOptions)
-          // 前一个元素是标题，移除首行换行符
-        if (payload[e - 1]?.type === ElementType.TITLE) {
-          text = text.replace(/^\n/, '')
+        // if (!text) continue
+        // const dom = convertElementToDom(element, editorOptions)
+        // //   // 前一个元素是标题，移除首行换行符
+        // if (payload[e - 1]?.type === ElementType.TITLE) {
+        //   text = text.replace(/^\n/, '')
+        // }
+  
+        // dom.innerText = text.replace(new RegExp(`${ZERO}`, 'g'), '\n')
+        // clipboardDom.append(dom)
+        
+        console.warn('是否有样式信息1111---->', element)
+        console.info('22222是否有样式信息1111---->', text)
+        const hasStyleInfo = Object.keys(element).length > 1;
+        
+        // 如果文本为空，但元素有样式信息，也创建 DOM（用于保持样式和换行效果）
+        if (!text && !hasStyleInfo) {
+          
+          continue
         }
-        dom.innerText = text.replace(new RegExp(`${ZERO}`, 'g'), '\n')
-        clipboardDom.append(dom)
+        
+        const dom = convertElementToDom(element, editorOptions)
+        // 前一个元素是标题，移除首行换行符
+        // if (payload[e - 1]?.type === ElementType.TITLE) {
+        //  console.log('22222前一个元素是标题，移除首行换行符---->', payload[e - 1]?.type,text)
+        //   text = text.replace(/^\n/, '')
+        // }
+        
+        // 如果文本为空但有样式信息，创建空的 span（会产生换行效果）
+        if (!text) {
+          // 空的 span 元素，保持样式信息，会产生换行效果
+          dom.innerText = text.replace(new RegExp(`${ZERO}`, 'g'), '\n')
+          console.warn('是你吗？--2222-->', dom,dom.innerText)
+          clipboardDom.append(dom)
+        } else {
+          // 如果文本只包含换行符，直接创建 br 标签，避免创建带样式的 span   deng:2025/12/23
+          //  if (text === '\n' || text === '\r\n') {
+          //   const br = document.createElement('br')
+          //   clipboardDom.append(br)
+          //   continue
+          // }
+          dom.innerText = text.replace(new RegExp(`${ZERO}`, 'g'), '\n')
+          clipboardDom.append(dom)
+        }
+        
+
       }
     }
     return clipboardDom
   }
   // 按行布局分类创建dom
   const clipboardDom = document.createElement('div')
-  const groupElementList = groupElementListByRowFlex(elementList)
+  let groupElementList:any[] = []
+  if(elementList.length > 0 && (<any>elementList[0]).value === ZERO && (<any>elementList[0]).left == 0 && Object.keys(elementList[0]).length == 4){
+    const elementList2:any[] = JSON.parse(JSON.stringify(elementList))
+    groupElementList = groupElementListByRowFlex(elementList2.slice(1))
+  }else{
+    groupElementList = groupElementListByRowFlex(elementList)
+  }
+  console.warn('groupElementListByRowFlex方法处理了元素的行布局--->', groupElementList)
   for (let g = 0; g < groupElementList.length; g++) {
     const elementGroupRowFlex = groupElementList[g]
     // 行布局样式设置
@@ -1392,8 +1812,10 @@ export function createDomFromElementList(
     rowFlexDom.innerHTML = buildDom(elementGroupRowFlex.data).innerHTML
     // 未设置行布局时无需行布局容器
     if (!isDefaultRowFlex) {
+      console.warn('rowFlexDom--未设置行布局时无需行布局容器11-->', rowFlexDom)
       clipboardDom.append(rowFlexDom)
     } else {
+      console.warn('rowFlexDom--未设置行布局时无需行布局容器222-->', rowFlexDom)
       rowFlexDom.childNodes.forEach(child => {
         clipboardDom.append(child.cloneNode(true))
       })
@@ -1450,27 +1872,93 @@ export function convertTextNodeToElement(
 export interface IGetElementListByHTMLOption {
   innerWidth: number
 }
-
+/**
+ * 这段TypeScript代码是一个HTML解析器，主要功能是将HTML文本转换为结构化的元素列表
+ * @param htmlText 
+ * @param options: {
+ *   innerWidth: number,
+ * }
+ * @returns 
+ */
 export function getElementListByHTML(
   htmlText: string,
   options: IGetElementListByHTMLOption
 ): IElement[] {
+  // console.log('htmlText---->', htmlText)
+  console.log('转成元素列表的入口函数:getElementListByHTML-2222-->',htmlText)
   const elementList: IElement[] = []
+
+  // 临时
+  // 在 getElementListByHTML 函数内部添加辅助函数
+  function createLineBreakElement(contextNode: Node | Element | null, inheritFrom?: IElement): IElement {
+    const element: IElement = {
+      value: '\n'
+    }
+    
+    // 从上下文节点获取样式
+    if (contextNode && contextNode.nodeType === 1) {
+      console.warn('从上下文获取到样式信息222-->', contextNode)
+      const contextElement = contextNode as Element
+       // 直接使用 convertTextAlignToRowFlex，它内部已经处理了 getComputedStyle
+      const rowFlex = convertTextAlignToRowFlex(contextElement as HTMLElement)
+      if (rowFlex !== RowFlex.LEFT) {
+        element.rowFlex = rowFlex
+      }
+    }
+    
+    // 如果没有从上下文获取到，尝试从前一个元素继承
+    if (inheritFrom && inheritFrom.rowFlex && !element.rowFlex) {
+      console.warn('如果没有从上下文获取到，尝试从前一个元素继承222-->', inheritFrom)
+      element.rowFlex = inheritFrom.rowFlex
+    }
+    
+    return element
+  }
   function findTextNode(dom: Element | Node) {
+    // 通过node.nodeType判断节点类型(3为文本节点，1为元素节点) 
+    // 如果是文本节点，则调用convertTextNodeToElement方法转换为元素，并添加到elementList中
+    // 如果是元素节点，则遍历其子节点，如果子节点是文本节点，则调用convertTextNodeToElement方法转换为元素，并添加到elementList中
+    // 如果子节点是元素节点，则继续遍历其子节点
+    // 如果子节点是文本节点，则调用convertTextNodeToElement方法转换为元素，并添加到elementList中
+    // 如果子节点是元素节点，则继续遍历其子节点
     if (dom.nodeType === 3) {
       const element = convertTextNodeToElement(dom)
+      console.log('dom--2222----->遍历DOM树的入口函数--3为元素节点--->', dom)
       if (element) {
         elementList.push(element)
       }
     } else if (dom.nodeType === 1) {
+      console.log('dom--2222----->遍历DOM树的入口函数--1为元素节点--->', dom)
       const childNodes = dom.childNodes
       for (let n = 0; n < childNodes.length; n++) {
         const node = childNodes[n]
+        console.log('每一次遍历node---->', node,n,childNodes.length)
         // br元素与display:block元素需换行
         if (node.nodeName === 'BR') {
-          elementList.push({
-            value: '\n'
-          })
+          console.log('node.nodeName === BR行node---->', node)
+          // elementList.push({
+          //   value: '\n'
+          // })
+          // const lastElement = elementList[elementList.length - 1]
+          // const lineBreakElement = createLineBreakElement(node.parentElement, lastElement)
+          // elementList.push(lineBreakElement)
+          const lastElement = elementList[elementList.length - 1]
+          // const isLastLineBreak = lastElement && lastElement.value === '\n'
+          //   const lastElement2 = elementList?.length > 1 ? elementList[elementList.length - 2] : null
+          // const isLastLineBreak2 = lastElement2 && lastElement2.value === '\n'
+          const lineBreakElement = createLineBreakElement(node.parentElement, lastElement)
+          elementList.push(lineBreakElement)
+          // if (!isLastLineBreak) {
+          //   // 使用 createLineBreakElement 保留样式信息
+          //   const lineBreakElement = createLineBreakElement(node.parentElement, lastElement)
+          //   elementList.push(lineBreakElement)
+          // }else{
+          //   // if(!isLastLineBreak2){
+          //     // const lineBreakElement2 = createLineBreakElement(node.parentElement, lastElement2 as IElement)
+          //     // elementList.push(lineBreakElement2)
+          //   // }
+          //   console.log('22222跳过添加换行符，最后一个元素已经是换行符')
+          // }
         } else if (node.nodeName === 'A') {
           const aElement = node as HTMLLinkElement
           const value = aElement.innerText
@@ -1498,14 +1986,71 @@ export function getElementListByHTML(
             level: titleNodeNameMapping[node.nodeName],
             valueList
           })
-         if (
-            node.nextSibling &&
-            !INLINE_NODE_NAME.includes(node.nextSibling.nodeName)
+          // 标题后跟非内联元素时会添加换行符元素  deng:2025/12/23
+          if (
+            node.nextSibling && !INLINE_NODE_NAME.includes(node.nextSibling.nodeName)
           ) {
-            elementList.push({
-              value: '\n'
-            })
+            console.log('22222如果下一个节点是块级元素（如 TABLE），不添加换行符node.nextSibling---->', node.nextSibling,node.nextSibling.nodeName)
+            // if(node.nextSibling.nodeName !== 'SPAN' && node.nextSibling.nodeName !== 'DIV') {
+            //   elementList.push({
+            //        value: '\n'
+            //      })
+            // }
+            //  if(node.nextSibling.nodeName == 'SPAN') {
+            //   const lastElement = elementList[elementList.length - 1]
+            //   const lineBreakElement = createLineBreakElement(node.parentElement, lastElement)
+            //   elementList.push(lineBreakElement)
+            // }else{
+            //      elementList.push({
+            //        value: '\n'
+            //      })
+            // }
+            // 检查下一个节点是否是 BR，如果是就不添加（BR 会自己处理）
+            // const isNextBr = node.nextSibling.nodeName === 'BR'
+            
+            // // 检查最后一个元素是否已经是换行符
+            // const lastElement = elementList[elementList.length - 1]
+            // const isLastLineBreak = lastElement && lastElement.value === '\n'
+            
+            // if (!isNextBr && !isLastLineBreak) {
+            //   if (node.nextSibling.nodeName === 'SPAN') {
+            //     // 下一个是 SPAN，使用 createLineBreakElement 保留样式
+            //     const lineBreakElement = createLineBreakElement(node.parentElement, lastElement)
+            //     elementList.push(lineBreakElement)
+            //    console.info('22222下一个是 SPAN，使用 createLineBreakElement 保留样式---->', lineBreakElement)
+            //   } else {
+            //     // 其他情况，也使用 createLineBreakElement 保留样式
+            //     const lineBreakElement = createLineBreakElement(node.parentElement, lastElement)
+            //     elementList.push(lineBreakElement)
+            //     console.info('22222下一个是其他元素，使用 createLineBreakElement 保留样式---->', lineBreakElement)
+            //   }
+            // } else {
+            //   console.log('22222跳过添加换行符，下一个是 BR 或最后一个元素已经是换行符')
+            // }
+           
           }
+              // // 标题后跟非内联元素时会添加换行符元素  deng:2025/12/23
+              // // 优化：跳过空的 SPAN 占位符，检查实际的下一个有效节点
+              // let nextSibling = node.nextSibling
+              // // 跳过空的 SPAN 元素（占位符）
+              // while (nextSibling && 
+              //       nextSibling.nodeName === 'SPAN' && 
+              //       nextSibling.childNodes.length === 0) {
+              //   nextSibling = nextSibling.nextSibling
+              // }
+              
+              // if (
+              //   nextSibling && !INLINE_NODE_NAME.includes(nextSibling.nodeName)
+              // ) {
+              //   console.log('22222标题后添加换行符，下一个节点:', nextSibling.nodeName)
+              //   // 检查最后一个元素是否已经是换行符，避免重复添加
+              //   // const lastElement = elementList[elementList.length - 1]
+              //   // if (!lastElement || lastElement.value !== '\n') {
+              //     elementList.push({
+              //       value: '\n'
+              //     })
+              //   // }
+              // }
         } else if (node.nodeName === 'UL' || node.nodeName === 'OL') {
           const listNode = node as HTMLOListElement | HTMLUListElement
           const listElement: IElement = {
@@ -1587,6 +2132,7 @@ export function getElementListByHTML(
           const element: IElement = {
             type: ElementType.TABLE,
             value: '\n',
+            // value: '',
             colgroup: [],
             trList: []
           }
@@ -1680,20 +2226,144 @@ export function getElementListByHTML(
               value: (<HTMLInputElement>node).checked
             }
           })
-        } else {
-          findTextNode(node)
-          if (node.nodeType === 1 && n !== childNodes.length - 1) {
-            const nodeElement = node as Element
-            const display = window.getComputedStyle(nodeElement).display
-             if (
-              display === 'block' &&
-              !/(\n|\r\n)$/.test(nodeElement.textContent!)
-            ) {
-              elementList.push({
-                value: '\n'
-              })
+        } else if (node.nodeName === 'SPAN' && node.childNodes.length === 0){
+          debugger
+              // 处理空的 span 元素（保留样式信息）
+          const spanElement = node as HTMLSpanElement
+          
+          // 检查是否是标题后的占位符
+          const prevSibling = node.previousSibling
+          const isAfterTitle = prevSibling && /H[1-6]/.test(prevSibling.nodeName || '')
+          
+          const style = window.getComputedStyle(spanElement)
+          const element: IElement = {
+            value: ''
+          }
+          
+          // 提取样式信息
+          const fontFamily = style.fontFamily
+          if (fontFamily && fontFamily !== 'initial') {
+            element.font = fontFamily.replace(/['"]/g, '')
+          }
+          
+          const fontSize = style.fontSize
+          if (fontSize) {
+            element.size = Math.floor(parseFloat(fontSize))
+          }
+          
+          const color = style.color
+          if (color && color !== 'rgba(0, 0, 0, 0)' && color !== 'rgb(0, 0, 0)') {
+            element.color = color
+          }
+          
+          if (Number(style.fontWeight) > 500) {
+            element.bold = true
+          }
+          
+          if (style.fontStyle.includes('italic')) {
+            element.italic = true
+          }
+          
+          const rowFlex = convertTextAlignToRowFlex(spanElement)
+          if (rowFlex !== RowFlex.LEFT) {
+            element.rowFlex = rowFlex
+          }
+          
+          if (style.backgroundColor !== 'rgba(0, 0, 0, 0)') {
+            element.highlight = style.backgroundColor
+          }
+          
+          if (style.textDecorationLine.includes('underline')) {
+            element.underline = true
+          }
+          
+          if (style.textDecorationLine.includes('line-through')) {
+            element.strikeout = true
+          }
+          
+          // 只有当元素有样式信息时才添加，避免添加完全空的元素
+          const hasSpecialStyle = Object.keys(element).length > 1
+          
+          if (hasSpecialStyle) {
+            // 如果空 span 在标题后，且样式与父元素（div）相同，可能是占位符，可以忽略
+            if (isAfterTitle) {
+              const parentElement = spanElement.parentElement
+              if (parentElement) {
+                const parentStyle = window.getComputedStyle(parentElement)
+                const parentRowFlex = convertTextAlignToRowFlex(parentElement)
+                
+                // 检查样式是否与父元素相同（可能是继承的样式）
+                const isSameAsParent = 
+                  (!element.font || element.font === parentStyle.fontFamily.replace(/['"]/g, '')) &&
+                  (!element.rowFlex || element.rowFlex === parentRowFlex) &&
+                  !element.color && !element.bold && !element.italic && 
+                  !element.highlight && !element.underline && !element.strikeout
+                
+                if (isSameAsParent) {
+                  // 样式与父元素相同，可能是占位符，忽略
+                  console.log('忽略标题后的空 span 占位符（样式与父元素相同）')
+                } else {
+                  // 有特殊样式，保留
+                  elementList.push(element)
+                }
+              } else {
+                elementList.push(element)
+              }
+            } else {
+              // 不在标题后，有样式就保留
+              elementList.push(element)
             }
           }
+          // 完全没有样式信息的空 span，直接忽略（不添加到 elementList）
+        } else {
+              // 这段代码主要用于在遍历DOM树时，对特定的块级元素进行处理，
+              // 当遇到不以换行符结尾的块级元素时，会添加一个换行符元素
+              findTextNode(node)
+              console.log('22222node---->', node,n,childNodes.length)
+              if (node.nodeType === 1 && n !== childNodes.length - 1) {
+                const nodeElement = node as Element
+                const display = window.getComputedStyle(nodeElement).display
+                 if (
+                  display === 'block' &&
+                  !/(\n|\r\n)$/.test(nodeElement.textContent!)
+                ) {
+                  // console.log('222这是块级元素，但是文本不是换行符，所以添加换行符nodeElement-11--->', nodeElement)
+                  // console.log('222这是块级元素，但是文本不是换行符，所以添加换行符elementList--22-->', elementList)
+                  // // 检查最后一个元素是否已经是换行符，避免重复添加
+                  // // const lastElement = elementList[elementList.length - 1]
+                  // // if (!lastElement || lastElement.value !== '\n') {
+                  //   elementList.push({
+                  //     value: '\n'
+                  //   })
+                  // // }
+                    // 检查前一个兄弟节点是否是 SPAN（空的或包含 br）
+                    const isPrevSpanWithBr = node && (node.nodeName === 'SPAN' || node.nodeName === 'DIV')
+                                                
+                                          
+                    console.log('22222isPrevSpanWithBr---->', node.nodeName)
+                    // 检查 elementList 的最后一个元素
+                    // const lastElement = elementList[elementList.length - 1]
+                    // const isLastEmptyElement = lastElement && 
+                    //                           lastElement.value === '' && 
+                    //                           Object.keys(lastElement).length > 1
+                    // const isLastLineBreak = lastElement && lastElement.value === '\n'
+                    
+                    // 如果前一个节点是空的 span 或包含 br 的 span，或者最后一个元素是空元素或换行符，不添加换行符
+                    if (!isPrevSpanWithBr) {
+                      console.log('222这是块级元素，但是文本不是换行符，所以添加换行符nodeElement-11--->', nodeElement)
+                      console.log('222这是块级元素，但是文本不是换行符，所以添加换行符elementList--22-->', elementList)
+                      // elementList.push({
+                      //   value: '\n'
+                      // })
+                      const lastElement = elementList[elementList.length - 1]
+                      const lineBreakElement = createLineBreakElement(node.parentElement, lastElement)
+                      elementList.push(lineBreakElement)
+                    } else {
+                      console.log('222跳过添加换行符，前一个元素是 span 或包含 br，或最后一个元素是空元素/换行符')
+                    }
+
+                }
+              }
         }
       }
     }
@@ -1701,6 +2371,8 @@ export function getElementListByHTML(
   // 追加dom
   const clipboardDom = document.createElement('div')
   clipboardDom.innerHTML = htmlText
+  console.log('clipboardDom--2222-->', clipboardDom)
+  console.log('clipboardDom--22221111-->', clipboardDom.innerHTML)
   document.body.appendChild(clipboardDom)
   const deleteNodes: ChildNode[] = []
   clipboardDom.childNodes.forEach(child => {
@@ -1713,6 +2385,7 @@ export function getElementListByHTML(
   findTextNode(clipboardDom)
   // 移除dom
   clipboardDom.remove()
+  console.log('elementList--2222-->', elementList)
   return elementList
 }
 

@@ -123,6 +123,16 @@ export default class Editor {
     // 重写
     this.override = new Override()
     // 启动
+    console.warn('22222启动---->', container,
+      editorOptions,
+      {
+        header: headerElementList,
+        main: mainElementList,
+        footer: footerElementList
+      },
+      this.listener,
+      this.eventBus,
+      this.override)
     const draw = new Draw(
       container,
       editorOptions,

@@ -1435,6 +1435,10 @@ export class CommandAdapt {
     const headerElementList = this.draw.getHeaderElementList()
     const mainElementList = this.draw.getOriginalMainElementList()
     const footerElementList = this.draw.getFooterElementList()
+    console.log('options--1111-->', options)
+    console.log('headerElementList--111-->', headerElementList)
+    console.log('mainElementList--1111-->', mainElementList)
+    console.log('footerElementList--11111-->', footerElementList)
     return {
       header: createDomFromElementList(headerElementList, options).innerHTML,
       main: createDomFromElementList(mainElementList, options).innerHTML,
@@ -2125,6 +2129,9 @@ export class CommandAdapt {
 
   public setHTML(payload: Partial<IEditorHTML>) {
     const { header, main, footer } = payload
+    console.log('header--2222222-->转成元素列表的-顶级-入口函数--->', header);
+    console.log('main--2222222-->转成元素列表的-顶级-入口函数--->', main);
+    console.log('footer--2222222-->转成元素列表的-顶级-入口函数--->', footer);
     const innerWidth = this.draw.getOriginalInnerWidth()
     // 不设置值时数据为undefined，避免覆盖当前数据
     const getElementList = (htmlText?: string) =>

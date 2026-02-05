@@ -1522,19 +1522,25 @@ export function createDomFromElementList(
 ) {
   console.log('转成DOM结构的入口函数:createDomFromElementList--11111-->',elementList)
   const editorOptions = mergeOption(options)
-/**
- * 根据元素数组构建DOM树
- * @param payload 元素数组，包含各种类型的元素
- * @returns 返回构建好的HTMLDivElement
- */
-/**
+  /**
+   * 根据元素数组构建DOM树
+   * @param payload 元素数组，包含各种类型的元素
+   * @returns 返回构建好的HTMLDivElement
+   */
+  /**
   // 创建一个div元素作为容器
  * 构建DOM元素的函数
  * @param payload - 包含元素信息的数组
   // 遍历payload数组中的每个元素
  * @returns 返回构建好的HTMLDivElement
  */
+/**
+ * 构建DOM元素的函数
+ * @param payload - 包含元素信息的数组
+ * @returns 返回构建好的HTMLDivElement
+ */
   function buildDom(payload: IElement[]): HTMLDivElement {
+  // 创建一个div元素作为容器
     const clipboardDom = document.createElement('div')
     console.log('buildDom----->payload---11111-->', payload)
      // 如果 payload 为空数组，添加一个 <br> 元素节点
@@ -1543,16 +1549,19 @@ export function createDomFromElementList(
       clipboardDom.append(br)
       return clipboardDom
     }
+  // 遍历payload数组中的每个元素
     for (let e = 0; e < payload.length; e++) {
       const element = payload[e]
       // 构造表格
       if (element.type === ElementType.TABLE) {
+      // 创建表格元素并设置基本属性
         const tableDom: HTMLTableElement = document.createElement('table')
         tableDom.setAttribute('cellSpacing', '0')
         tableDom.setAttribute('cellpadding', '0')
         tableDom.setAttribute('border', '0')
         tableDom.setAttribute('data-border-type',element.borderType||TableBorder.ALL)
-        const borderStyle = '1px solidrgb(53, 18, 18)'
+      // 定义边框样式
+        const borderStyle = '1px solid #000000'
         // 表格边框
         if (!element.borderType || element.borderType === TableBorder.ALL) {
           tableDom.style.borderTop = borderStyle
@@ -1702,11 +1711,225 @@ export function createDomFromElementList(
         const tab = document.createElement('span')
         tab.innerHTML = `${NON_BREAKING_SPACE}${NON_BREAKING_SPACE}`
         clipboardDom.append(tab)
-      } else if (element.type === ElementType.CONTROL) {
-        const controlElement = document.createElement('span')
-        const childDom = buildDom(element.control?.value || [])
-        controlElement.innerHTML = childDom.innerHTML
-        clipboardDom.append(controlElement)
+      } else if (element.type === ElementType.CONTROL && element.type) {
+        // const controlElement = document.createElement('span')
+        // const childDom = buildDom(element.control?.value || [])
+        // controlElement.innerHTML = childDom.innerHTML
+        // clipboardDom.append(controlElement)
+
+
+        //  //deng:2025/12/26 控件处理-start
+        // const control = element.control
+        // if (!control) {
+        //   continue
+        // }
+        // const controlValue = control.value || []
+        // const isPlaceholder = controlValue.length === 0 && control.placeholder
+        // // 创建 prefix span（如果存在）
+        // if (control.prefix || control.preText) {
+        //   const prefixSpan = document.createElement('span')
+        //   prefixSpan.innerText = control.prefix || "{"
+        //   clipboardDom.append(prefixSpan)
+        // }
+        
+      
+        
+        // // 创建 preText span（如果存在且显示占位符）
+        // if (isPlaceholder && control.preText) {
+        //   const preTextSpan = document.createElement('span')
+        //   preTextSpan.innerText = control.preText
+        //   clipboardDom.append(preTextSpan)
+        // }
+        
+        // // 创建内容 span（如果 value 为空数组，使用 placeholder）
+        // const contentSpan = document.createElement('span')
+        // if (isPlaceholder) {
+        //   // 使用 placeholder 作为占位符
+        //   contentSpan.innerText = control.placeholder || ''
+        //   // 可以添加占位符样式，例如灰色
+        //   contentSpan.style.color = editorOptions?.control?.placeholderColor || '#999'
+        // } else {
+        //   // 使用实际值
+        //   const childDom = buildDom(controlValue)
+        //   contentSpan.innerHTML = childDom.innerHTML
+        // }
+        // clipboardDom.append(contentSpan)
+
+        // if(isPlaceholder && control.postText) {
+        //   const postTextSpan = document.createElement('span')
+        //   postTextSpan.innerText = control.postText
+        //   clipboardDom.append(postTextSpan)
+        // }
+        
+        // // 创建 postfix span（如果存在）
+        // if (control.postfix || control.preText) {
+        //   const postfixSpan = document.createElement('span')
+        //   postfixSpan.innerText = control.postfix || "}"
+        //   clipboardDom.append(postfixSpan)
+        // }
+        //deng:2025/12/26 控件处理-end
+        //deng:2025/12/26 控件处理-start-二次尝试
+        const control = element.control
+        if (!control) {
+          continue
+        }
+        const controlValue = control.value || []
+        const isPlaceholder = controlValue.length === 0
+        
+        // 创建控件容器，添加数据属性以便解析时识别
+        const controlWrapper = document.createElement('span')
+        controlWrapper.setAttribute('data-control-type', control.type || 'text')
+        if (control.conceptId) {
+          controlWrapper.setAttribute('data-concept-id', control.conceptId)
+        }
+        if (control.code) {
+          controlWrapper.setAttribute('data-control-code', String(control.code))
+        }
+        // 存储 valueSets 信息（JSON 字符串）
+        if (control.valueSets && control.valueSets.length > 0) {
+          controlWrapper.setAttribute('data-value-sets', JSON.stringify(control.valueSets))
+        }
+        
+        // 创建 prefix span（如果存在）
+        if (control.prefix) {
+          const prefixSpan = document.createElement('span')
+          prefixSpan.setAttribute('data-control-part', 'prefix')
+          prefixSpan.innerText = control.prefix
+          controlWrapper.append(prefixSpan)
+        }
+        
+        // 创建 preText span（如果存在且显示占位符）相当于 其他
+        if (control.preText) {
+          const preTextSpan = document.createElement('span')
+          preTextSpan.setAttribute('data-control-part', 'preText')
+          preTextSpan.innerText = control.preText
+          controlWrapper.append(preTextSpan)
+        }
+        
+        // // 创建内容 span（根据控件类型处理）
+        // const contentSpan = document.createElement('span')
+        // if (isPlaceholder) {
+        //   // 使用 placeholder 作为占位符
+        //   contentSpan.innerText = control.placeholder || ''
+        //   // 可以添加占位符样式，例如灰色
+        //   contentSpan.style.color = editorOptions?.control?.placeholderColor || '#999'
+        // } else {
+        //   // 根据控件类型处理实际值
+        //   if (control.type === ControlType.SELECT) {
+        //     // select 类型：显示 value 数组中的值（多个值用逗号分隔）
+        //     const selectedValues = controlValue.map(v => v.value).filter(Boolean)
+        //     contentSpan.innerText = selectedValues.join(', ')
+        //   } else if (control.type === ControlType.CHECKBOX) {
+        //     // checkbox 类型：显示 value 数组中的值（多个值用逗号分隔）
+        //     const selectedValues = controlValue.map(v => v.value).filter(Boolean)
+        //     // 使用多选分隔符，如果没有则使用默认的逗号+空格
+        //     const delimiter = control.multiSelectDelimiter || ', '
+        //     contentSpan.innerText = selectedValues.join(delimiter)
+        //   } else {
+        //     // text 等其他类型：使用实际值
+        //     const childDom = buildDom(controlValue)
+        //     contentSpan.innerHTML = childDom.innerHTML
+        //   }
+        // }
+        // controlWrapper.append(contentSpan)
+         // 创建内容 span（根据控件类型处理）
+         const contentSpan = document.createElement('span')
+         contentSpan.setAttribute('data-control-part', 'content')
+         if (isPlaceholder) {
+          //  // 使用 placeholder 作为占位符
+          //  contentSpan.setAttribute('data-control-placeholder', 'true')
+          //  contentSpan.innerText = control.placeholder || ''
+          //  // 可以添加占位符样式，例如灰色
+          //  contentSpan.style.color = editorOptions?.control?.placeholderColor || '#999'
+            // 使用 placeholder 作为占位符
+            contentSpan.setAttribute('data-control-placeholder',control.placeholder || '')
+          
+          } else {
+          //  contentSpan.setAttribute('data-control-placeholder', control.placeholder || '')
+          //  // 根据控件类型处理实际值
+          //  if (control.type === ControlType.SELECT) {
+          //    // select 类型：显示 value 数组中的值（多个值用逗号分隔）
+          //    const selectedValues = controlValue.map(v => v.value).filter(Boolean)
+          //    contentSpan.innerText = selectedValues.join(', ')
+          //  } else if (control.type === ControlType.CHECKBOX) {
+          //    // checkbox 类型：显示 value 数组中的值（多个值用逗号分隔）
+          //    const selectedValues = controlValue.map(v => v.value).filter(Boolean)
+          //    // 使用多选分隔符，如果没有则使用默认的逗号+空格
+          //    const delimiter = control.multiSelectDelimiter || ', '
+          //    contentSpan.innerText = selectedValues.join(delimiter)
+          //    // 存储分隔符以便解析时使用
+          //    if (control.multiSelectDelimiter) {
+          //      contentSpan.setAttribute('data-multi-select-delimiter', control.multiSelectDelimiter)
+          //    }
+          //  } else {
+          //    // text 等其他类型：使用实际值
+          //    const childDom = buildDom(controlValue)
+          //    contentSpan.innerHTML = childDom.innerHTML
+          //  }
+          //-----2025/12/27 控件处理-start
+          contentSpan.setAttribute('data-control-placeholder', control.placeholder || '')
+          // 根据控件类型处理实际值
+          if (control.type === ControlType.SELECT) {
+            // SELECT 类型：显示 value 数组中的值（多个值用逗号分隔）
+            const selectedValues = controlValue.map(v => v.value).filter(Boolean)
+            contentSpan.innerText = selectedValues.join(', ')
+          } else if (control.type === ControlType.CHECKBOX) {
+            // CHECKBOX 类型：显示 value 数组中的值（多个值用分隔符分隔）
+            const selectedValues = controlValue.map(v => v.value).filter(Boolean)
+            // 使用多选分隔符，如果没有则使用默认的逗号+空格
+            const delimiter = control.multiSelectDelimiter || ', '
+            contentSpan.innerText = selectedValues.join(delimiter)
+            // 存储分隔符以便解析时使用
+            if (control.multiSelectDelimiter) {
+              contentSpan.setAttribute('data-multi-select-delimiter', control.multiSelectDelimiter)
+            }
+          } else if (control.type === ControlType.RADIO) {
+            // RADIO 类型：单选，通过 code 从 valueSets 中查找对应的 value 显示
+            if (control.code && control.valueSets) {
+              const selectedValue = control.valueSets.find(
+                (vs: any) => vs.code === control.code
+              )?.value
+              contentSpan.innerText = selectedValue || ''
+            } else if (controlValue.length > 0) {
+              // 如果没有 code，使用 value 数组中的值
+              const selectedValues = controlValue.map(v => v.value).filter(Boolean)
+              contentSpan.innerText = selectedValues.join('')
+            }
+          } else if (control.type === ControlType.DATE || control.type === ControlType.NUMBER) {
+            // DATE 和 NUMBER 类型：类似 TEXT，直接显示文本内容
+            // 但需要保存 dateFormat（如果是 DATE 类型）
+            if (control.type === ControlType.DATE && control.dateFormat) {
+              contentSpan.setAttribute('data-date-format', control.dateFormat)
+            }
+            const childDom = buildDom(controlValue)
+            contentSpan.innerHTML = childDom.innerHTML
+          } else {
+            // TEXT 等其他类型：使用实际值
+            const childDom = buildDom(controlValue)
+            contentSpan.innerHTML = childDom.innerHTML
+          }
+         }
+         controlWrapper.append(contentSpan)
+
+        // 创建 postText span（如果存在且显示占位符）相当于。
+        if (control.postText) {
+          const postTextSpan = document.createElement('span')
+          postTextSpan.setAttribute('data-control-part', 'postText')
+          postTextSpan.innerText = control.postText
+          controlWrapper.append(postTextSpan)
+        }
+        
+       // 创建 postfix span（如果存在）
+       if (control.postfix) {
+        const postfixSpan = document.createElement('span')
+        postfixSpan.setAttribute('data-control-part', 'postfix')
+        postfixSpan.innerText = control.postfix
+        controlWrapper.append(postfixSpan)
+      }
+        
+        clipboardDom.append(controlWrapper)
+        //deng:2025/12/26 控件处理-end
+
       } else if (element.type === ElementType.PAGE_BREAK) {
         const pageBreakElement = document.createElement('div')
         pageBreakElement.style.breakAfter = 'page'
@@ -1933,6 +2156,396 @@ export function getElementListByHTML(
       for (let n = 0; n < childNodes.length; n++) {
         const node = childNodes[n]
         console.log('每一次遍历node---->', node,n,childNodes.length)
+
+        // // 检测控件元素（带有 data-control-type 属性的 span）
+        // if (node.nodeType === 1 && (node as Element).hasAttribute('data-control-type')) {
+        //   const controlElement = node as HTMLElement
+        //   const controlType = controlElement.getAttribute('data-control-type')
+        //   const conceptId = controlElement.getAttribute('data-concept-id')
+        //   const controlCode = controlElement.getAttribute('data-control-code')
+        //   const valueSetsStr = controlElement.getAttribute('data-value-sets')
+          
+        //   // 解析控件结构：prefix、preText、content、postText、postfix
+        //   const spans = Array.from(controlElement.querySelectorAll('span'))
+        //   let prefix = ''
+        //   let postfix = ''
+        //   let preText = ''
+        //   let postText = ''
+        //   let contentText = ''
+        //   let isPlaceholder = false
+          
+        //   // 遍历所有 span 提取内容
+        //   for (const span of spans) {
+        //     const text = span.textContent || ''
+        //     const color = (span as HTMLElement).style.color
+            
+        //     // 检查是否是占位符（灰色文本）
+        //     if (color && (color.includes('999') || color.includes('156, 155, 155'))) {
+        //       isPlaceholder = true
+        //       contentText = text
+        //     } else if (!contentText && text) {
+        //       // 第一个非空文本作为内容
+        //       contentText = text
+        //     }
+            
+        //     // 检查是否是 prefix/postfix（通常是单个字符的括号）
+        //     if (text.length === 1 && ['{', '[', '(', '<'].includes(text)) {
+        //       prefix = text
+        //     } else if (text.length === 1 && ['}', ']', ')', '>'].includes(text)) {
+        //       postfix = text
+        //     }
+        //   }
+          
+        //   // 如果没有找到 prefix/postfix，尝试从完整文本中提取
+        //   const fullText = controlElement.textContent || ''
+        //   if (!prefix && !postfix) {
+        //     if (fullText.startsWith('{') && fullText.endsWith('}')) {
+        //       prefix = '{'
+        //       postfix = '}'
+        //       contentText = fullText.slice(1, -1)
+        //     } else if (fullText.startsWith('[') && fullText.endsWith(']')) {
+        //       prefix = '['
+        //       postfix = ']'
+        //       contentText = fullText.slice(1, -1)
+        //     }
+        //   }
+          
+        //   // 提取 preText 和 postText（如果存在）
+        //   // preText 通常在 prefix 之后，postText 在 postfix 之前
+        //   if (prefix && contentText) {
+        //     const prefixIndex = fullText.indexOf(prefix)
+        //     const contentStart = fullText.indexOf(contentText, prefixIndex)
+        //     if (contentStart > prefixIndex + 1) {
+        //       preText = fullText.slice(prefixIndex + 1, contentStart)
+        //     }
+        //   }
+        //   if (postfix && contentText) {
+        //     const postfixIndex = fullText.indexOf(postfix)
+        //     const contentEnd = fullText.indexOf(contentText) + contentText.length
+        //     if (postfixIndex > contentEnd) {
+        //       postText = fullText.slice(contentEnd, postfixIndex)
+        //     }
+        //   }
+          
+        //   // 清理 contentText（移除 preText 和 postText）
+        //   if (preText && contentText.startsWith(preText)) {
+        //     contentText = contentText.slice(preText.length)
+        //   }
+        //   if (postText && contentText.endsWith(postText)) {
+        //     contentText = contentText.slice(0, -postText.length)
+        //   }
+          
+        //   // 构建控件元素
+        //   const controlElementData: IElement = {
+        //     value: '',
+        //     type: ElementType.CONTROL,
+        //     control: {
+        //       type: controlType as ControlType,
+        //       value: [],
+        //       conceptId: conceptId || undefined,
+        //       code: controlCode || null,
+        //       prefix: prefix || undefined,
+        //       postfix: postfix || undefined,
+        //       preText: preText || undefined,
+        //       postText: postText || undefined
+        //     }
+        //   }
+          
+        //   // 解析 valueSets（如果存在）
+        //   if (valueSetsStr) {
+        //     try {
+        //       controlElementData.control!.valueSets = JSON.parse(valueSetsStr)
+        //     } catch (e) {
+        //       console.warn('Failed to parse valueSets:', e)
+        //     }
+        //   }
+          
+        //   // 解析内容值
+        //   if (isPlaceholder && contentText) {
+        //     controlElementData.control!.placeholder = contentText.trim()
+        //   } else if (contentText) {
+        //     // 解析实际值
+        //     if (controlType === ControlType.SELECT || controlType === ControlType.CHECKBOX) {
+        //       // 对于 select 和 checkbox，按逗号分割
+        //       const delimiter = controlType === ControlType.CHECKBOX 
+        //         ? (controlElementData.control!.multiSelectDelimiter || ', ') 
+        //         : ', '
+        //       const values = contentText.split(delimiter).map(v => v.trim()).filter(Boolean)
+        //       controlElementData.control!.value = values.map(value => ({ 
+        //         value,
+        //         type: ElementType.TEXT
+        //       }))
+              
+        //       // 根据 valueSets 和选中的值，计算 code
+        //       if (controlElementData.control!.valueSets && values.length > 0) {
+        //         const selectedCodes: string[] = []
+        //         for (const val of values) {
+        //           const valueSet = controlElementData.control!.valueSets.find(
+        //             (vs: any) => vs.value === val
+        //           )
+        //           if (valueSet && valueSet.code) {
+        //             selectedCodes.push(valueSet.code)
+        //           }
+        //         }
+        //         if (selectedCodes.length > 0) {
+        //           controlElementData.control!.code = selectedCodes.join(',')
+        //         }
+        //       }
+        //     } else {
+        //       // text 类型
+        //       controlElementData.control!.value = [{ 
+        //         value: contentText.trim(),
+        //         type: ElementType.TEXT
+        //       }]
+        //     }
+        //   }
+          
+        //   elementList.push(controlElementData)
+        //   continue
+        // }
+        //  // 检测控件元素（带有 data-control-type 属性的 span）
+        //  if (node.nodeType === 1 && (node as Element).hasAttribute('data-control-type')) {
+        //   const controlElement = node as HTMLElement
+        //   const controlType = controlElement.getAttribute('data-control-type')
+        //   const conceptId = controlElement.getAttribute('data-concept-id')
+        //   const controlCode = controlElement.getAttribute('data-control-code')
+        //   const valueSetsStr = controlElement.getAttribute('data-value-sets')
+          
+        //   // 通过 data-control-part 属性直接识别各个部分
+        //   const prefixSpan = controlElement.querySelector('span[data-control-part="prefix"]')
+        //   const preTextSpan = controlElement.querySelector('span[data-control-part="preText"]')
+        //   const contentSpan = controlElement.querySelector('span[data-control-part="content"]')
+        //   const postTextSpan = controlElement.querySelector('span[data-control-part="postText"]')
+        //   const postfixSpan = controlElement.querySelector('span[data-control-part="postfix"]')
+          
+        //   // 提取各部分内容
+        //   const prefix = prefixSpan?.textContent || ''
+        //   const preText = preTextSpan?.textContent || ''
+        //   const postText = postTextSpan?.textContent || ''
+        //   const postfix = postfixSpan?.textContent || ''
+          
+        //   // 提取内容文本和占位符标识
+        //   const contentText = contentSpan?.textContent || ''
+        //   const placeholderText = contentSpan?.getAttribute('data-control-placeholder') || ''
+        //   const multiSelectDelimiter = contentSpan?.getAttribute('data-multi-select-delimiter') || ', '
+          
+        //   // 构建控件元素
+        //   const controlElementData: IElement = {
+        //     value: '',
+        //     type: ElementType.CONTROL,
+        //     control: {
+        //       type: controlType as ControlType,
+        //       value: [],
+        //       conceptId: conceptId || undefined,
+        //       code: controlCode || null,
+        //       prefix: prefix || undefined,
+        //       placeholder: placeholderText || undefined,
+        //       postfix: postfix || undefined,
+        //       preText: preText || undefined,
+        //       postText: postText || undefined
+        //     }
+        //   }
+          
+        //   // 解析 valueSets（如果存在）
+        //   if (valueSetsStr) {
+        //     try {
+        //       controlElementData.control!.valueSets = JSON.parse(valueSetsStr)
+        //     } catch (e) {
+        //       console.warn('Failed to parse valueSets:', e)
+        //     }
+        //   }
+          
+        //   // 解析内容值
+        //   // if (isPlaceholder && contentText) {
+        //   //   controlElementData.control!.placeholder = contentText.trim()
+        //   // } else if (contentText) {
+        //    if (contentText) {
+        //     // 解析实际值
+        //     if (controlType === ControlType.SELECT || controlType === ControlType.CHECKBOX) {
+        //       // 对于 select 和 checkbox，使用存储的分隔符分割
+        //       const delimiter = controlType === ControlType.CHECKBOX ? multiSelectDelimiter : ', '
+        //       const values = contentText.split(delimiter).map(v => v.trim()).filter(Boolean)
+        //       controlElementData.control!.value = values.map(value => ({ 
+        //         value,
+        //         type: ElementType.TEXT
+        //       }))
+              
+        //       // 根据 valueSets 和选中的值，计算 code
+        //       if (controlElementData.control!.valueSets && values.length > 0) {
+        //         const selectedCodes: string[] = []
+        //         for (const val of values) {
+        //           const valueSet = controlElementData.control!.valueSets.find(
+        //             (vs: any) => vs.value === val
+        //           )
+        //           if (valueSet && valueSet.code) {
+        //             selectedCodes.push(valueSet.code)
+        //           }
+        //         }
+        //         if (selectedCodes.length > 0) {
+        //           controlElementData.control!.code = selectedCodes.join(',')
+        //         }
+        //       }
+              
+        //       // 保存 multiSelectDelimiter（如果是 checkbox）
+        //       if (controlType === ControlType.CHECKBOX && multiSelectDelimiter !== ', ') {
+        //         controlElementData.control!.multiSelectDelimiter = multiSelectDelimiter
+        //       }
+        //     } else {
+        //       // text 类型：解析 innerHTML 中的内容
+        //       if (contentSpan && contentSpan.innerHTML) {
+        //         // 递归解析 contentSpan 的 innerHTML
+        //         const nestedElements = getElementListByHTML(contentSpan.innerHTML, options)
+        //         controlElementData.control!.value = nestedElements
+        //       } else {
+        //         // 如果 innerHTML 为空，使用文本内容
+        //         controlElementData.control!.value = [{ 
+        //           value: contentText.trim(),
+        //           type: ElementType.TEXT
+        //         }]
+        //       }
+        //     }
+        //   }
+          
+        //   elementList.push(controlElementData)
+        //   continue
+        // }
+        // 检测控件元素（带有 data-control-type 属性的 span）
+        if (node.nodeType === 1 && (node as Element).hasAttribute('data-control-type')) {
+          const controlElement = node as HTMLElement
+          const controlType = controlElement.getAttribute('data-control-type')
+          const conceptId = controlElement.getAttribute('data-concept-id')
+          const controlCode = controlElement.getAttribute('data-control-code')
+          const valueSetsStr = controlElement.getAttribute('data-value-sets')
+          
+          // 通过 data-control-part 属性直接识别各个部分
+          const prefixSpan = controlElement.querySelector('span[data-control-part="prefix"]')
+          const preTextSpan = controlElement.querySelector('span[data-control-part="preText"]')
+          const contentSpan = controlElement.querySelector('span[data-control-part="content"]')
+          const postTextSpan = controlElement.querySelector('span[data-control-part="postText"]')
+          const postfixSpan = controlElement.querySelector('span[data-control-part="postfix"]')
+          
+          // 提取各部分内容
+          const prefix = prefixSpan?.textContent || ''
+          const preText = preTextSpan?.textContent || ''
+          const postText = postTextSpan?.textContent || ''
+          const postfix = postfixSpan?.textContent || ''
+          
+          // 提取内容文本和占位符标识
+          const contentText = contentSpan?.textContent || ''
+          const placeholderText = contentSpan?.getAttribute('data-control-placeholder') || ''
+          const multiSelectDelimiter = contentSpan?.getAttribute('data-multi-select-delimiter') || ', '
+          const dateFormat = contentSpan?.getAttribute('data-date-format') || ''
+          
+          // 构建控件元素
+          const controlElementData: IElement = {
+            value: '',
+            type: ElementType.CONTROL,
+            control: {
+              type: controlType as ControlType,
+              value: [],
+              conceptId: conceptId || undefined,
+              code: controlCode || null,
+              prefix: prefix || undefined,
+              placeholder: placeholderText || undefined,
+              postfix: postfix || undefined,
+              preText: preText || undefined,
+              postText: postText || undefined
+            }
+          }
+          
+          // 解析 valueSets（如果存在）
+          if (valueSetsStr) {
+            try {
+              controlElementData.control!.valueSets = JSON.parse(valueSetsStr)
+            } catch (e) {
+              console.warn('Failed to parse valueSets:', e)
+            }
+          }
+          
+          // 解析 dateFormat（如果是 DATE 类型）
+          if (controlType === ControlType.DATE && dateFormat) {
+            controlElementData.control!.dateFormat = dateFormat
+          }
+          
+          // 解析内容值
+          if (contentText) {
+            // 解析实际值
+            if (controlType === ControlType.SELECT || controlType === ControlType.CHECKBOX) {
+              // SELECT 和 CHECKBOX：使用存储的分隔符分割
+              const delimiter = controlType === ControlType.CHECKBOX ? multiSelectDelimiter : ', '
+              const values = contentText.split(delimiter).map(v => v.trim()).filter(Boolean)
+              controlElementData.control!.value = values.map(value => ({ 
+                value,
+                type: ElementType.TEXT
+              }))
+              
+              // 根据 valueSets 和选中的值，计算 code
+              if (controlElementData.control!.valueSets && values.length > 0) {
+                const selectedCodes: string[] = []
+                for (const val of values) {
+                  const valueSet = controlElementData.control!.valueSets.find(
+                    (vs: any) => vs.value === val
+                  )
+                  if (valueSet && valueSet.code) {
+                    selectedCodes.push(valueSet.code)
+                  }
+                }
+                if (selectedCodes.length > 0) {
+                  controlElementData.control!.code = selectedCodes.join(',')
+                }
+              }
+              
+              // 保存 multiSelectDelimiter（如果是 checkbox）
+              if (controlType === ControlType.CHECKBOX && multiSelectDelimiter !== ', ') {
+                controlElementData.control!.multiSelectDelimiter = multiSelectDelimiter
+              }
+            } else if (controlType === ControlType.RADIO) {
+              // RADIO：单选，通过文本内容从 valueSets 中查找对应的 code
+              if (controlElementData.control!.valueSets && contentText) {
+                const valueSet = controlElementData.control!.valueSets.find(
+                  (vs: any) => vs.value === contentText.trim()
+                )
+                if (valueSet && valueSet.code) {
+                  controlElementData.control!.code = valueSet.code
+                  controlElementData.control!.value = [{ 
+                    value: contentText.trim(),
+                    type: ElementType.TEXT
+                  }]
+                } else {
+                  // 如果没有找到匹配的 valueSet，直接使用文本内容
+                  controlElementData.control!.value = [{ 
+                    value: contentText.trim(),
+                    type: ElementType.TEXT
+                  }]
+                }
+              } else if (contentText) {
+                // 如果没有 valueSets，直接使用文本内容
+                controlElementData.control!.value = [{ 
+                  value: contentText.trim(),
+                  type: ElementType.TEXT
+                }]
+              }
+            } else {
+              // TEXT、DATE、NUMBER 类型：解析 innerHTML 中的内容
+              if (contentSpan && contentSpan.innerHTML) {
+                // 递归解析 contentSpan 的 innerHTML
+                const nestedElements = getElementListByHTML(contentSpan.innerHTML, options)
+                controlElementData.control!.value = nestedElements
+              } else {
+                // 如果 innerHTML 为空，使用文本内容
+                controlElementData.control!.value = [{ 
+                  value: contentText.trim(),
+                  type: ElementType.TEXT
+                }]
+              }
+            }
+          }
+          
+          elementList.push(controlElementData)
+          continue
+        }
+
+
         // br元素与display:block元素需换行
         if (node.nodeName === 'BR') {
           console.log('node.nodeName === BR行node---->', node)
@@ -2084,7 +2697,25 @@ export function getElementListByHTML(
             value: '\n',
             type: ElementType.SEPARATOR
           })
-        } else if (node.nodeName === 'IMG') {
+        } else if (node.nodeName === 'DIV' && node.nodeType === 1) {  //deng:2025/12/26 分页符DIV处理
+          // 检查是否是分页符 DIV（带有 break-after: page 样式）
+          const divElement = node as HTMLDivElement
+          const style = window.getComputedStyle(divElement)
+          if (style.breakAfter === 'page' || divElement.style.breakAfter === 'page') {
+            // elementList.push({
+            //   value: '\n',
+            //   type: ElementType.PAGE_BREAK
+            // })
+            const lastElement = elementList[elementList.length - 1]
+            const lineBreakElement = createLineBreakElement(node.parentElement, lastElement)
+            lineBreakElement.type = ElementType.PAGE_BREAK
+            elementList.push(lineBreakElement)
+            // 跳过处理该 DIV 的子节点（分页符 DIV 通常是空的）
+            continue
+          }
+          // 如果不是分页符 DIV，继续正常处理（递归处理子节点）
+          findTextNode(node)
+        }  else if (node.nodeName === 'IMG') {
           const { src, width, height } = node as HTMLImageElement
           if (src && width && height) {
             elementList.push({
@@ -2204,6 +2835,11 @@ export function getElementListByHTML(
             element.borderType = borderType;
             elementList.push(element)
           }
+            if(node.nextSibling?.nodeName === 'SPAN') {
+              elementList.push({
+                   value: '\n'
+                 })
+            }
         } else if (
           node.nodeName === 'INPUT' &&
           (<HTMLInputElement>node).type === ControlComponent.CHECKBOX
@@ -2226,95 +2862,6 @@ export function getElementListByHTML(
               value: (<HTMLInputElement>node).checked
             }
           })
-        } else if (node.nodeName === 'SPAN' && node.childNodes.length === 0){
-          debugger
-              // 处理空的 span 元素（保留样式信息）
-          const spanElement = node as HTMLSpanElement
-          
-          // 检查是否是标题后的占位符
-          const prevSibling = node.previousSibling
-          const isAfterTitle = prevSibling && /H[1-6]/.test(prevSibling.nodeName || '')
-          
-          const style = window.getComputedStyle(spanElement)
-          const element: IElement = {
-            value: ''
-          }
-          
-          // 提取样式信息
-          const fontFamily = style.fontFamily
-          if (fontFamily && fontFamily !== 'initial') {
-            element.font = fontFamily.replace(/['"]/g, '')
-          }
-          
-          const fontSize = style.fontSize
-          if (fontSize) {
-            element.size = Math.floor(parseFloat(fontSize))
-          }
-          
-          const color = style.color
-          if (color && color !== 'rgba(0, 0, 0, 0)' && color !== 'rgb(0, 0, 0)') {
-            element.color = color
-          }
-          
-          if (Number(style.fontWeight) > 500) {
-            element.bold = true
-          }
-          
-          if (style.fontStyle.includes('italic')) {
-            element.italic = true
-          }
-          
-          const rowFlex = convertTextAlignToRowFlex(spanElement)
-          if (rowFlex !== RowFlex.LEFT) {
-            element.rowFlex = rowFlex
-          }
-          
-          if (style.backgroundColor !== 'rgba(0, 0, 0, 0)') {
-            element.highlight = style.backgroundColor
-          }
-          
-          if (style.textDecorationLine.includes('underline')) {
-            element.underline = true
-          }
-          
-          if (style.textDecorationLine.includes('line-through')) {
-            element.strikeout = true
-          }
-          
-          // 只有当元素有样式信息时才添加，避免添加完全空的元素
-          const hasSpecialStyle = Object.keys(element).length > 1
-          
-          if (hasSpecialStyle) {
-            // 如果空 span 在标题后，且样式与父元素（div）相同，可能是占位符，可以忽略
-            if (isAfterTitle) {
-              const parentElement = spanElement.parentElement
-              if (parentElement) {
-                const parentStyle = window.getComputedStyle(parentElement)
-                const parentRowFlex = convertTextAlignToRowFlex(parentElement)
-                
-                // 检查样式是否与父元素相同（可能是继承的样式）
-                const isSameAsParent = 
-                  (!element.font || element.font === parentStyle.fontFamily.replace(/['"]/g, '')) &&
-                  (!element.rowFlex || element.rowFlex === parentRowFlex) &&
-                  !element.color && !element.bold && !element.italic && 
-                  !element.highlight && !element.underline && !element.strikeout
-                
-                if (isSameAsParent) {
-                  // 样式与父元素相同，可能是占位符，忽略
-                  console.log('忽略标题后的空 span 占位符（样式与父元素相同）')
-                } else {
-                  // 有特殊样式，保留
-                  elementList.push(element)
-                }
-              } else {
-                elementList.push(element)
-              }
-            } else {
-              // 不在标题后，有样式就保留
-              elementList.push(element)
-            }
-          }
-          // 完全没有样式信息的空 span，直接忽略（不添加到 elementList）
         } else {
               // 这段代码主要用于在遍历DOM树时，对特定的块级元素进行处理，
               // 当遇到不以换行符结尾的块级元素时，会添加一个换行符元素
@@ -2361,9 +2908,21 @@ export function getElementListByHTML(
                     } else {
                       console.log('222跳过添加换行符，前一个元素是 span 或包含 br，或最后一个元素是空元素/换行符')
                     }
+                 
 
-                }
-              }
+                }   
+              
+              }  
+              // if(node.nodeType === 1&&node.nodeName === 'SPAN'){
+              //         const previousElement = node.previousSibling as Element
+              //         if(previousElement?.nodeName === 'TABLE'){
+              //           console.log('22222previousElement---->', previousElement)
+              //           const lastElement = elementList[elementList.length - 1]
+              //           const lineBreakElement = createLineBreakElement(previousElement, lastElement)
+              //           elementList.push(lineBreakElement)
+              //         }
+                    
+              // }
         }
       }
     }

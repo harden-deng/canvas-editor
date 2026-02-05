@@ -1,8 +1,8 @@
 {
-  "name": "@hufe921/canvas-editor",
-  "author": "Hufe",
+  "name": "hardengzd-canvas-editor",
+  "author": "hardengzd",
   "license": "MIT",
-  "version": "0.9.118",
+  "version": "1.0.1",
   "description": "rich text editor by canvas/svg",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
@@ -18,10 +18,10 @@
   "typings": "./dist/src/editor/index.d.ts",
   "main": "./dist/canvas-editor.umd.js",
   "module": "./dist/canvas-editor.es.js",
-  "homepage": "https://github.com/Hufe921/canvas-editor",
+  "homepage": "https://github.com/harden-deng/canvas-editor",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Hufe921/canvas-editor.git"
+    "url": "https://github.com/harden-deng/canvas-editor.git"
   },
   "keywords": [
     "canvas-editor",
@@ -58,6 +58,7 @@
     "cypress-file-upload": "^5.0.8",
     "eslint": "7.32.0",
     "simple-git-hooks": "^2.8.1",
+    "terser": "^5.44.1",
     "typescript": "4.9.5",
     "vite": "^2.4.2",
     "vite-plugin-css-injected-by-js": "^2.1.1",

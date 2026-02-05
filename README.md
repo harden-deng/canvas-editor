@@ -1,32 +1,12 @@
-<h1 align="center">canvas-editor</h1>
+# canvas-editor
 
-<p align="center">
-<a href="https://www.npmjs.com/package/@hufe921/canvas-editor" target="_blank"><img src="https://img.shields.io/npm/v/@hufe921/canvas-editor.svg?sanitize=true" alt="Version"></a>
- <a href="https://github.com/hufe921/canvas-editor/actions" target="_blank">
-  <img alt="Cypress Passing" src="https://github.com/hufe921/canvas-editor/workflows/cypress/badge.svg" />
-</a>
-<a href="https://github.com/hufe921/canvas-editor/graphs/contributors" target="_blank">
-  <img alt="GitHub Contributors" src="https://img.shields.io/github/contributors/hufe921/canvas-editor" />
-</a>
-<a href="https://www.npmjs.com/package/@hufe921/canvas-editor" target="_blank"><img src="https://img.shields.io/npm/l/@hufe921/canvas-editor.svg?sanitize=true" alt="License"></a>
-<a href="https://github.com/Hufe921/canvas-editor/issues/new/choose" target="_blank"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs"></a>
-</p>
 
-<p align="center"> a rich text editor by canvas/svg</p>
 
-<p align="center">
-  <a href="https://hufe.club/canvas-editor" target="_blank">View Demo</a>
-  ·
-  <a href="https://hufe.club/canvas-editor-docs" target="_blank">View Docs</a>
-  ·
-  <a href="https://github.com/Hufe921/canvas-editor/issues/new?assignees=&labels=&projects=&template=bug_report.yml" target="_blank">Report Bug</a>
-  ·
-  <a href="https://github.com/Hufe921/canvas-editor/issues/new?assignees=&labels=%3Asparkles%3A+feature+request&projects=&template=feature_request.yml" target="_blank">Request Feature</a>
-  ·
-  <a href="https://github.com/Hufe921/canvas-editor/discussions" target="_blank">FAQ</a>
-</p>
+a rich text editor by canvas/svg
 
-<p align="center">Love the project? Please consider <a href="https://hufe.club/donate.jpg" target="_blank">donating(赞助)</a> to help it improve!</p>
+[View Demo](https://hufe.club/canvas-editor) · [View Docs](https://hufe.club/canvas-editor-docs) · [Report Bug](https://github.com/Hufe921/canvas-editor/issues/new?assignees=&labels=&projects=&template=bug_report.yml) · [Request Feature](https://github.com/Hufe921/canvas-editor/issues/new?assignees=&labels=%3Asparkles%3A+feature+request&projects=&template=feature_request.yml) · [FAQ](https://github.com/Hufe921/canvas-editor/discussions)
+
+Love the project? Please consider [donating(赞助)](https://hufe.club/donate.jpg) to help it improve!
 
 ## Tips
 
@@ -39,7 +19,7 @@
 ## Basic usage
 
 ```bash
-npm i @hufe921/canvas-editor --save
+npm i hardengzd-canvas-editor --save
 ```
 
 ```html
@@ -83,7 +63,7 @@ new Editor(document.querySelector('.canvas-editor'), {
 
 ## Snapshot
 
-![image](https://github.com/Hufe921/canvas-editor/blob/main/src/assets/snapshots/main_v0.9.35.png)
+image
 
 ## Install
 
